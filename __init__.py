@@ -7,6 +7,13 @@ from PyQt5 import QtCore
 import jieba
 
 
+class LineEditWithFocusedSignal(QLineEdit):
+    focused = pyqtSignal()
+
+    def focusInEvent(self, e):
+        self.focused.emit()
+
+
 class ChinesePrestudy:
     """
     Class that manages all the state associated with the Chinese Prestudy add-on.
@@ -61,7 +68,7 @@ class ChinesePrestudy:
 
         self.vocab_hsk_5_radio = QRadioButton('3000 (HSK 5+)')
         self.vocab_custom_radio = QRadioButton('Custom: ')
-        self.vocab_custom_box = QLineEdit()
+        self.vocab_custom_box = LineEditWithFocusedSignal()
 
         radio_hbox = QHBoxLayout()
         radio_hbox.addStretch(1)
@@ -73,6 +80,9 @@ class ChinesePrestudy:
         vbox.addLayout(radio_hbox)
 
         self.words_window.setLayout(vbox)
+
+        # TODO: for some reason, this disables the blinking cursor in `vocab_custom_box`
+        self.vocab_custom_box.focused.connect(lambda: self.vocab_custom_radio.click())
 
         self.words_window.show()
 
