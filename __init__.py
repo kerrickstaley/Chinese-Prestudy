@@ -48,10 +48,40 @@ class ChinesePrestudy:
 
         self.in_words = self.get_words_from_text(self.in_text)
 
-        print(self.in_words)
+        self.show_words_window()
 
     def get_words_from_text(self, text):
         return set(jieba.cut(text))
+
+    def show_words_window(self):
+        self.words_window = w = QWidget(mw, flags=QtCore.Qt.Window)
+
+        vbox = QVBoxLayout()
+        vbox.addWidget(QLabel('Enter your vocab size target:'))
+
+        self.vocab_hsk_5_radio = QRadioButton('3000 (HSK 5+)')
+        self.vocab_custom_radio = QRadioButton('Custom: ')
+        self.vocab_custom_box = QLineEdit()
+        vocab_custom_wrapper = QWidget()
+        vocab_custom_wrapper_hbox = QHBoxLayout()
+        vocab_custom_wrapper_hbox.addWidget(self.vocab_custom_radio)
+        vocab_custom_wrapper_hbox.addWidget(self.vocab_custom_box)
+        vocab_custom_wrapper.setLayout(vocab_custom_wrapper_hbox)
+        exclusive_group = QButtonGroup()
+        exclusive_group.addButton(self.vocab_hsk_5_radio)
+        exclusive_group.addButton(self.vocab_custom_radio)
+
+        radio_hbox = QHBoxLayout()
+        radio_hbox.addStretch(1)
+        radio_hbox.addWidget(self.vocab_hsk_5_radio)
+        radio_hbox.addStretch(2)
+        radio_hbox.addWidget(vocab_custom_wrapper)
+        radio_hbox.addStretch(1)
+        vbox.addLayout(radio_hbox)
+
+        self.words_window.setLayout(vbox)
+
+        self.words_window.show()
 
 
 # create a new menu item, "test"
