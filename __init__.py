@@ -16,17 +16,6 @@ class ChinesePrestudy:
     def instantiate_and_run(cls):
         cls().show_text_entry_window()
 
-    def get_words_from_text(self, text):
-        return set(jieba.cut(text))
-
-    def text_entry_continue_action(self):
-        self.in_text = self.in_text_box.toPlainText()
-        self.text_entry_window.close()
-
-        self.in_words = self.get_words_from_text(self.in_text)
-
-        print(self.in_words)
-
     def show_text_entry_window(self):
         """
         Show the first window of the utility. This window prompts the user to paste in some text.
@@ -52,6 +41,17 @@ class ChinesePrestudy:
         w.setLayout(vbox)
 
         w.show()
+
+    def text_entry_continue_action(self):
+        self.in_text = self.in_text_box.toPlainText()
+        self.text_entry_window.close()
+
+        self.in_words = self.get_words_from_text(self.in_text)
+
+        print(self.in_words)
+
+    def get_words_from_text(self, text):
+        return set(jieba.cut(text))
 
 
 # create a new menu item, "test"
