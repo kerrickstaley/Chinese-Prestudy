@@ -14,21 +14,28 @@ class ChinesePrestudy:
     def instantiate_and_run(cls):
         cls().show_text_entry_window()
 
+    def text_entry_continue_action(self):
+        self.in_text = self.in_text_box.toPlainText()
+        self.text_entry_window.close()
+        print(self.in_text)
+
     def show_text_entry_window(self):
         """
         Show the first window of the utility. This window prompts the user to paste in some text.
         """
-        w = QWidget(mw, flags=QtCore.Qt.Window)
+        self.text_entry_window = w = QWidget(mw, flags=QtCore.Qt.Window)
         w.setWindowTitle('Chinese Prestudy')
 
         vbox = QVBoxLayout()
 
         vbox.addWidget(QLabel('Paste in the Chinese text you want to read:'))
 
-        text_box = QTextEdit()
-        vbox.addWidget(text_box)
+        self.in_text_box = QTextEdit()
+        vbox.addWidget(self.in_text_box)
 
         continue_button = QPushButton('Continue')
+        # TODO not sure why a lambda is needed here
+        continue_button.clicked.connect(lambda: self.text_entry_continue_action())
         hbox = QHBoxLayout()
         hbox.addStretch(1)
         hbox.addWidget(continue_button)
