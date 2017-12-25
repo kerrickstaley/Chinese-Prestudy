@@ -28,6 +28,12 @@ class ChinesePrestudy:
         text_box = QTextEdit()
         vbox.addWidget(text_box)
 
+        continue_button = QPushButton('Continue')
+        hbox = QHBoxLayout()
+        hbox.addStretch(1)
+        hbox.addWidget(continue_button)
+        vbox.addLayout(hbox)
+
         w.setLayout(vbox)
 
         w.show()
