@@ -79,12 +79,28 @@ class ChinesePrestudy:
         radio_hbox.addStretch(1)
         vbox.addLayout(radio_hbox)
 
+        vbox.addWidget(self.words_and_defs_table_widget([('你好', 'hello'), ('的', '(possessive)')]))
+
         self.words_window.setLayout(vbox)
 
         # TODO: for some reason, this disables the blinking cursor in `vocab_custom_box`
         self.vocab_custom_box.focused.connect(lambda: self.vocab_custom_radio.click())
 
         self.words_window.show()
+
+    def words_and_defs_table_widget(self, word_def_pairs, parent=None):
+        """
+        Generates a widget that displays a table of words and definitions.
+
+        :param word_def_pairs: list of (word, def) tuples
+        :return: a widget
+        """
+        w = QTableWidget(len(word_def_pairs), 2, parent)
+        for i, (word, def_) in enumerate(word_def_pairs):
+            w.setItem(i, 0, QTableWidgetItem(word))
+            w.setItem(i, 1, QTableWidgetItem(def_))
+
+        return w
 
 
 # create a new menu item, "test"
