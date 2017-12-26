@@ -118,15 +118,22 @@ class ChinesePrestudy:
         self.words_and_defs_table = self.init_words_and_defs_table()
         vbox.addWidget(self.words_and_defs_table)
 
+        continue_hbox = QHBoxLayout()
+        continue_hbox.addStretch(1)
+        continue_button = QPushButton('Continue')
+        continue_hbox.addWidget(continue_button)
+        vbox.addLayout(continue_hbox)
+
         self.words_window.setLayout(vbox)
+
+        self.update_words_and_defs_table()
 
         # TODO: for some reason, this disables the blinking cursor in `vocab_custom_box`
         self.vocab_custom_box.focused.connect(lambda: self.vocab_custom_radio.click())
         self.vocab_hsk_5_radio.clicked.connect(lambda: self.update_words_and_defs_table())
         self.vocab_custom_radio.clicked.connect(lambda: self.update_words_and_defs_table())
         self.vocab_custom_box.textChanged.connect(lambda: self.update_words_and_defs_table())
-
-        self.update_words_and_defs_table()
+        continue_button.clicked.connect(lambda: self.words_window_continue_action())
 
         self.words_window.show()
 
@@ -216,6 +223,9 @@ class ChinesePrestudy:
         :return: a widget
         """
         return QTableWidget(0, 2, parent)
+
+    def words_window_continue_action(self):
+        pass
 
 
 # create a new menu item, "test"
