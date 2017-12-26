@@ -244,6 +244,34 @@ class FinalTouchesWindow(QWidget):
     def init_layout(self):
         self.setWindowTitle('Chinese Prestudy')
 
+        vbox = QVBoxLayout()
+
+        vbox.addWidget(QLabel('Select deck to add cards to:'))
+        self.combo_box = QComboBox(self)
+        self.combo_box.addItems(self.deck_names)
+        vbox.addWidget(self.combo_box)
+
+        vbox.addWidget(QLabel('(Optional) Enter tag(s) to add to cards, separated by commas:'))
+        self.tags_box = QLineEdit()
+        vbox.addWidget(self.tags_box)
+
+        hbox = QHBoxLayout()
+        self.finish_button = QPushButton('Add Cards')
+        hbox.addStretch(1)
+        hbox.addWidget(self.finish_button)
+        vbox.addLayout(hbox)
+
+        self.setLayout(vbox)
+
+    @property
+    def deck_names(self):
+        return [d['name'] for d in self.decks]
+
+    @property
+    def decks(self):
+        return sorted(list(mw.col.decks.decks.values()), key=lambda d: d['name'])
+
+
 # create a new menu item, "test"
 action = QAction("test", mw)
 # set it to call testFunction when it's clicked
