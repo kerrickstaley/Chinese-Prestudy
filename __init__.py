@@ -61,7 +61,10 @@ class ChinesePrestudy:
         return set(jieba.cut(text))
 
     def show_words_window(self):
-        self.words_window = w = QWidget(mw, flags=QtCore.Qt.Window)
+        """
+        Show the second window of the utility. This window shows the new words that were extracted from the text.
+        """
+        self.words_window = QWidget(mw, flags=QtCore.Qt.Window)
 
         vbox = QVBoxLayout()
         vbox.addWidget(QLabel('Enter your vocab size target:'))
