@@ -5,6 +5,16 @@ from aqt.qt import *
 from PyQt5 import QtCore
 # TODO need to package this with the extension
 import jieba
+# TODO need to package this with the extension
+from cached_property import cached_property
+
+
+def is_chinese_word(s):
+    if not s:
+        return False
+    # TODO this is not a complete list, see
+    # https://stackoverflow.com/questions/1366068/whats-the-complete-range-for-chinese-characters-in-unicode
+    return all(0x4E00 <= ord(c) <= 0x9FFF for c in s)
 
 
 class LineEditWithFocusedSignal(QLineEdit):
@@ -34,8 +44,8 @@ class ChinesePrestudy:
 
         vbox.addWidget(QLabel('Paste in the Chinese text you want to read:'))
 
-        self.in_text_box = QTextEdit()
-        vbox.addWidget(self.in_text_box)
+        self.input_text_box = QTextEdit()
+        vbox.addWidget(self.input_text_box)
 
         continue_button = QPushButton('Continue')
         # TODO not sure why a lambda is needed here
@@ -50,15 +60,29 @@ class ChinesePrestudy:
         w.show()
 
     def text_entry_continue_action(self):
-        self.in_text = self.in_text_box.toPlainText()
+        self.input_text = self.input_text_box.toPlainText()
         self.text_entry_window.close()
-
-        self.in_words = self.get_words_from_text(self.in_text)
 
         self.show_words_window()
 
-    def get_words_from_text(self, text):
-        return set(jieba.cut(text))
+    @cached_property
+    def input_words(self):
+        """
+        Return unique words in text, as a list, sorted by order of appearance in text.
+        """
+        rv = []
+        seen_words = set()
+
+        for word in jieba.cut(self.input_text):
+            if word in seen_words:
+                continue
+            if not is_chinese_word(word):
+                continue
+
+            seen_words.add(word)
+            rv.append(word)
+
+        return rv
 
     def show_words_window(self):
         """
@@ -90,6 +114,35 @@ class ChinesePrestudy:
         self.vocab_custom_box.focused.connect(lambda: self.vocab_custom_radio.click())
 
         self.words_window.show()
+
+    @cached_property
+    def unknown_words(self):
+        """
+        Get words in the text that aren't already in the collection.
+        """
+        return [word for word in self.input_words if word not in self.words_already_studied]
+
+    @cached_property
+    def words_already_studied(self):
+        """
+        Get words that are already studied, as a set.
+
+        TODO this is a total hack right now.
+        """
+        # logic: a word is studied if there is a corresponding note with at least one card that is seen, or if there
+        # is a corresponding note with all cards suspended
+        def words_for_query(query):
+            notes = [mw.col.getNote(id_) for id_ in mw.col.findNotes(query)]
+            rv = set()
+            for note in notes:
+                rv.update(f for f in note.fields if is_chinese_word(f))
+            return rv
+
+        suspended = words_for_query('is:suspended')
+        not_suspended = words_for_query('-is:suspended')
+        not_new = words_for_query('-is:new')
+
+        return not_new | (suspended - not_suspended)
 
     def words_and_defs_table_widget(self, word_def_pairs, parent=None):
         """
