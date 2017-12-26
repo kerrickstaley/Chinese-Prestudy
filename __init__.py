@@ -3,10 +3,13 @@ from aqt import mw
 # import all of the Qt GUI library
 from aqt.qt import *
 from PyQt5 import QtCore
+from typing import List, Set, Optional
 # TODO need to package this with the extension
 import jieba
 # TODO need to package this with the extension
 from cached_property import cached_property
+# TODO need to package this with the extension
+import chinese_vocab_list
 
 
 def is_chinese_word(s):
@@ -66,7 +69,7 @@ class ChinesePrestudy:
         self.show_words_window()
 
     @cached_property
-    def input_words(self):
+    def input_words(self) -> List[str]:
         """
         Return unique words in text, as a list, sorted by order of appearance in text.
         """
@@ -113,17 +116,43 @@ class ChinesePrestudy:
         # TODO: for some reason, this disables the blinking cursor in `vocab_custom_box`
         self.vocab_custom_box.focused.connect(lambda: self.vocab_custom_radio.click())
 
+        for w in self.words_to_study(3000):
+            print(w.simp)
+
         self.words_window.show()
 
+    def words_to_study(self, limit) -> List[chinese_vocab_list.VocabWord]:
+        words = [w for w in self.all_words_to_study[:limit] if w is not None]
+
+        # re-sort to match input order
+        # TODO this is inefficient
+        def index(vocab_word):
+            for i, input_word in enumerate(self.unknown_words):
+                if input_word in [vocab_word.simp, vocab_word.trad]:
+                    return i
+            raise Exception
+
+        return sorted(words, key=index)
+
     @cached_property
-    def unknown_words(self):
+    def all_words_to_study(self) -> List[Optional[chinese_vocab_list.VocabWord]]:
         """
-        Get words in the text that aren't already in the collection.
+        Returns `vocab_list.words`, with `None` replacing elements that aren't in `input_text`.
+
+        This allows us to quickly determine which words correspond to a given vocab target.
+        """
+        unknown_words_set = set(self.unknown_words)
+        return [w if {w.simp, w.trad} & unknown_words_set else None for w in self.vocab_list.words]
+
+    @cached_property
+    def unknown_words(self) -> List[str]:
+        """
+        Get words in the text that aren't already studied.
         """
         return [word for word in self.input_words if word not in self.words_already_studied]
 
     @cached_property
-    def words_already_studied(self):
+    def words_already_studied(self) -> Set[str]:
         """
         Get words that are already studied, as a set.
 
@@ -143,6 +172,10 @@ class ChinesePrestudy:
         not_new = words_for_query('-is:new')
 
         return not_new | (suspended - not_suspended)
+
+    @cached_property
+    def vocab_list(self):
+        return chinese_vocab_list.VocabList.load()
 
     def words_and_defs_table_widget(self, word_def_pairs, parent=None):
         """
