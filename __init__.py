@@ -236,9 +236,9 @@ class FinalTouchesWindow(QWidget):
     Window 3/3, allows the user to set deck and tags.
     """
 
-    def __init__(self, words: List[chinese_vocab_list.VocabWord]):
+    def __init__(self, vocab_words: List[chinese_vocab_list.VocabWord]):
         super().__init__(mw, flags=QtCore.Qt.Window)
-        self.words = words
+        self.vocab_words = vocab_words
         self.init_layout()
 
     def init_layout(self):
@@ -261,6 +261,8 @@ class FinalTouchesWindow(QWidget):
         hbox.addWidget(self.finish_button)
         vbox.addLayout(hbox)
 
+        self.finish_button.clicked.connect(lambda: self.add_cards_action())
+
         self.setLayout(vbox)
 
     @property
@@ -270,6 +272,15 @@ class FinalTouchesWindow(QWidget):
     @property
     def decks(self):
         return sorted(list(mw.col.decks.decks.values()), key=lambda d: d['name'])
+
+    def add_cards_action(self):
+        add_cards(self.vocab_words, self.combo_box.currentText(), self.tags_box.text().split(','))
+        self.close()
+
+
+def add_cards(vocab_words: List[chinese_vocab_list.VocabWord], deck_name: str, tags: List[str]):
+    print(vocab_words, deck_name, tags)
+
 
 
 # create a new menu item, "test"
