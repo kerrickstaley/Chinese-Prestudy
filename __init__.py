@@ -4,6 +4,7 @@ from aqt import mw
 from aqt.qt import *
 from PyQt5 import QtCore
 from typing import List, Set, Optional
+import logging
 # TODO need to package this with the extension
 import jieba
 # TODO need to package this with the extension
@@ -75,6 +76,9 @@ class ChinesePrestudy:
         """
         rv = []
         seen_words = set()
+
+        jieba.setLogLevel(logging.ERROR)
+        jieba.initialize()
 
         for word in jieba.cut(self.input_text):
             if word in seen_words:
