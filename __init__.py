@@ -113,20 +113,47 @@ class ChinesePrestudy:
         radio_hbox.addStretch(1)
         vbox.addLayout(radio_hbox)
 
-        vbox.addWidget(self.words_and_defs_table_widget([('你好', 'hello'), ('的', '(possessive)')]))
+        vbox.addWidget(QLabel('These are the new words you should learn:'))
+
+        self.words_and_defs_table = self.init_words_and_defs_table()
+        vbox.addWidget(self.words_and_defs_table)
 
         self.words_window.setLayout(vbox)
 
         # TODO: for some reason, this disables the blinking cursor in `vocab_custom_box`
         self.vocab_custom_box.focused.connect(lambda: self.vocab_custom_radio.click())
+        self.vocab_hsk_5_radio.clicked.connect(lambda: self.update_words_and_defs_table())
+        self.vocab_custom_radio.clicked.connect(lambda: self.update_words_and_defs_table())
+        self.vocab_custom_box.textChanged.connect(lambda: self.update_words_and_defs_table())
 
-        for w in self.words_to_study(3000):
-            print(w.simp)
+        self.update_words_and_defs_table()
 
         self.words_window.show()
 
-    def words_to_study(self, limit) -> List[chinese_vocab_list.VocabWord]:
-        words = [w for w in self.all_words_to_study[:limit] if w is not None]
+    def update_words_and_defs_table(self):
+        words_to_study = self.words_to_study
+        self.words_and_defs_table.setRowCount(len(words_to_study))
+        for i, word in enumerate(self.words_to_study):
+            self.words_and_defs_table.setItem(i, 0, QTableWidgetItem(word.simp))
+            self.words_and_defs_table.setItem(i, 1, QTableWidgetItem(word.defs[0]))
+
+    @property
+    def words_to_study(self) -> List[chinese_vocab_list.VocabWord]:
+        return self.get_words_to_study(self.word_target)
+
+    @property
+    def word_target(self):
+        if self.vocab_hsk_5_radio.isChecked():
+            return 3000
+        if self.vocab_custom_radio.isChecked():
+            try:
+                return int(self.vocab_custom_box.text())
+            except ValueError:
+                return 0
+        return 0
+
+    def get_words_to_study(self, target) -> List[chinese_vocab_list.VocabWord]:
+        words = [w for w in self.all_words_to_study[:target] if w is not None]
 
         # re-sort to match input order
         # TODO this is inefficient
@@ -181,19 +208,14 @@ class ChinesePrestudy:
     def vocab_list(self):
         return chinese_vocab_list.VocabList.load()
 
-    def words_and_defs_table_widget(self, word_def_pairs, parent=None):
+    def init_words_and_defs_table(self, parent=None):
         """
         Generates a widget that displays a table of words and definitions.
 
         :param word_def_pairs: list of (word, def) tuples
         :return: a widget
         """
-        w = QTableWidget(len(word_def_pairs), 2, parent)
-        for i, (word, def_) in enumerate(word_def_pairs):
-            w.setItem(i, 0, QTableWidgetItem(word))
-            w.setItem(i, 1, QTableWidgetItem(def_))
-
-        return w
+        return QTableWidget(0, 2, parent)
 
 
 # create a new menu item, "test"
