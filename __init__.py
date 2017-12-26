@@ -225,8 +225,24 @@ class ChinesePrestudy:
         return QTableWidget(0, 2, parent)
 
     def words_window_continue_action(self):
-        pass
+        final_touches_window = FinalTouchesWindow(self.words_to_study)
 
+        self.words_window.close()
+        final_touches_window.show()
+
+
+class FinalTouchesWindow(QWidget):
+    """
+    Window 3/3, allows the user to set deck and tags.
+    """
+
+    def __init__(self, words: List[chinese_vocab_list.VocabWord]):
+        super().__init__(mw, flags=QtCore.Qt.Window)
+        self.words = words
+        self.init_layout()
+
+    def init_layout(self):
+        self.setWindowTitle('Chinese Prestudy')
 
 # create a new menu item, "test"
 action = QAction("test", mw)
