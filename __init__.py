@@ -2,6 +2,7 @@
 from aqt import mw
 # import all of the Qt GUI library
 from aqt.qt import *
+import anki.storage
 from PyQt5 import QtCore
 from typing import List, Set, Optional
 import logging
@@ -11,6 +12,10 @@ import jieba
 from cached_property import cached_property
 # TODO need to package this with the extension
 import chinese_vocab_list
+# TODO need to package this with the extension
+import chineseflashcards
+# TODO need to package this with the extension
+import genanki
 
 
 def is_chinese_word(s):
@@ -274,18 +279,35 @@ class FinalTouchesWindow(QWidget):
         return sorted(list(mw.col.decks.decks.values()), key=lambda d: d['name'])
 
     def add_notes_action(self):
+        # Checkpoint so user can undo later
+        mw.checkpoint('Add Chinese Prestudy Notes')
+
         add_notes(self.vocab_words, self.combo_box.currentText(), self.tags_box.text().split(','))
+
+        # Refresh main window view
+        mw.reset()
+
         self.close()
 
 
 def add_notes(vocab_words: List[chinese_vocab_list.VocabWord], deck_name: str, tags: List[str]):
-    print(vocab_words, deck_name, tags)
+    # get dict that describes deck
+    deck = [d for d in mw.col.decks.decks.values() if d['name'] == deck_name][0]
 
+    # By using the same ID and name as the existing deck, the notes are added to the existing deck, rather than going
+    # into a new deck or the default deck.
+    out_deck = chineseflashcards.ChineseDeck(deck['id'], deck_name)
+
+    for vocab_word in vocab_words:
+        out_deck.add_vocab_list_word(vocab_word, tags=tags)
+
+    # Write the data to the collection
+    out_deck.addon_write_to_collection()
 
 
 # create a new menu item, "test"
 action = QAction("test", mw)
-# set it to call testFunction when it's clicked
+# set it to call ChinesePrestudy.instantiate_and_run when it's clicked
 action.triggered.connect(ChinesePrestudy.instantiate_and_run)
 # and add it to the tools menu
 mw.form.menuTools.addAction(action)
