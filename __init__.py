@@ -246,22 +246,22 @@ class FinalTouchesWindow(QWidget):
 
         vbox = QVBoxLayout()
 
-        vbox.addWidget(QLabel('Select deck to add cards to:'))
+        vbox.addWidget(QLabel('Select deck to add notes to:'))
         self.combo_box = QComboBox(self)
         self.combo_box.addItems(self.deck_names)
         vbox.addWidget(self.combo_box)
 
-        vbox.addWidget(QLabel('(Optional) Enter tag(s) to add to cards, separated by commas:'))
+        vbox.addWidget(QLabel('(Optional) Enter tag(s) to add to notes, separated by commas:'))
         self.tags_box = QLineEdit()
         vbox.addWidget(self.tags_box)
 
         hbox = QHBoxLayout()
-        self.finish_button = QPushButton('Add Cards')
+        self.finish_button = QPushButton('Add Notes')
         hbox.addStretch(1)
         hbox.addWidget(self.finish_button)
         vbox.addLayout(hbox)
 
-        self.finish_button.clicked.connect(lambda: self.add_cards_action())
+        self.finish_button.clicked.connect(lambda: self.add_notes_action())
 
         self.setLayout(vbox)
 
@@ -273,12 +273,12 @@ class FinalTouchesWindow(QWidget):
     def decks(self):
         return sorted(list(mw.col.decks.decks.values()), key=lambda d: d['name'])
 
-    def add_cards_action(self):
-        add_cards(self.vocab_words, self.combo_box.currentText(), self.tags_box.text().split(','))
+    def add_notes_action(self):
+        add_notes(self.vocab_words, self.combo_box.currentText(), self.tags_box.text().split(','))
         self.close()
 
 
-def add_cards(vocab_words: List[chinese_vocab_list.VocabWord], deck_name: str, tags: List[str]):
+def add_notes(vocab_words: List[chinese_vocab_list.VocabWord], deck_name: str, tags: List[str]):
     print(vocab_words, deck_name, tags)
 
 
