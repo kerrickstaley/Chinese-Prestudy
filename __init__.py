@@ -305,8 +305,8 @@ def add_notes(vocab_words: List[chinese_vocab_list.VocabWord], deck_name: str, t
     out_deck.addon_write_to_collection()
 
 
-# create a new menu item, "test"
-action = QAction("test", mw)
+# create a new menu item, "Chinese Prestudy"
+action = QAction('Chinese Prestudy', mw)
 # set it to call ChinesePrestudy.instantiate_and_run when it's clicked
 action.triggered.connect(ChinesePrestudy.instantiate_and_run)
 # and add it to the tools menu
