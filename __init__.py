@@ -302,7 +302,7 @@ def add_notes(vocab_words: List[chinese_vocab_list.VocabWord], deck_name: str, t
         out_deck.add_vocab_list_word(vocab_word, tags=tags)
 
     # Write the data to the collection
-    out_deck.addon_write_to_collection()
+    out_deck.write_to_collection_from_addon()
 
 
 # create a new menu item, "Chinese Prestudy"
