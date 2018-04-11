@@ -256,7 +256,7 @@ class FinalTouchesWindow(QWidget):
         self.combo_box.addItems(self.deck_names)
         vbox.addWidget(self.combo_box)
 
-        vbox.addWidget(QLabel('(Optional) Enter tag(s) to add to notes, separated by commas:'))
+        vbox.addWidget(QLabel('(Optional) Enter tag(s) to add to notes, separated by spaces:'))
         self.tags_box = QLineEdit()
         vbox.addWidget(self.tags_box)
 
@@ -282,7 +282,7 @@ class FinalTouchesWindow(QWidget):
         # Checkpoint so user can undo later
         mw.checkpoint('Add Chinese Prestudy Notes')
 
-        add_notes(self.vocab_words, self.combo_box.currentText(), self.tags_box.text().split(','))
+        add_notes(self.vocab_words, self.combo_box.currentText(), self.tags_box.text().split())
 
         # Refresh main window view
         mw.reset()
