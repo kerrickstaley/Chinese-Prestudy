@@ -4,7 +4,7 @@ from aqt import mw
 from aqt.qt import *
 import anki.storage
 from PyQt5 import QtCore
-from typing import List, Set, Optional
+from collections import defaultdict
 import logging
 # TODO need to package this with the extension
 import jieba
@@ -16,6 +16,9 @@ import chinese_vocab_list
 import chineseflashcards
 # TODO need to package this with the extension
 import genanki
+
+# Temporary hack until typing module is supported.
+List = defaultdict(lambda: None)
 
 
 def is_chinese_word(s):
