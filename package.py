@@ -15,7 +15,6 @@ SOURCE_FILES = [
 DEPENDENCIES_PYPI = [
   'jieba',
   'cached_property',
-  'genanki',
 ]
 
 DEPENDENCIES_LOCAL = [
@@ -23,6 +22,7 @@ DEPENDENCIES_LOCAL = [
   'chineseflashcards',
   'pystache',
   'yaml',
+  'genanki',
 ]
 
 PACKAGE_CACHE_DIR = 'package_cache'
