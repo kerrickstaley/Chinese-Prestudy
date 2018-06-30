@@ -311,7 +311,13 @@ def add_notes(vocab_words: List[chinese_vocab_list.VocabWord], deck_name: str, t
     out_deck = chineseflashcards.ChineseDeck(deck['id'], deck_name)
 
     for vocab_word in vocab_words:
-        out_deck.add_vocab_list_word(vocab_word, tags=tags)
+        note = out_deck.add_vocab_list_word(vocab_word, tags=tags)
+        # Temporary hack: suspend everything except the "Simplified" card.
+        # This should ideally be based on a GUI selector.
+        for i, c in enumerate(note.cards):
+            if i == 1:
+                continue
+            c.suspend = True
 
     # Write the data to the collection
     out_deck.write_to_collection_from_addon()
