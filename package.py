@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import glob
 import os
 import requests
 import shutil
@@ -10,10 +11,15 @@ SOURCE_FILES = [
   '__init__.py',
 ]
 
-DEPENDENCIES = [
+DEPENDENCIES_PYPI = [
   'jieba',
   'cached_property',
   'genanki',
+]
+
+DEPENDENCIES_LOCAL = [
+  'chinese_vocab_list',
+  'chineseflashcards',
 ]
 
 PACKAGE_CACHE_DIR = 'package_cache'
@@ -49,8 +55,8 @@ def retrieve_with_cache(url, dest_path):
   shutil.copy(cached_path, dest_path)
 
 
-def copy_dependencies():
-  for dep_pkg_name in DEPENDENCIES:
+def copy_dependencies_from_pypi():
+  for dep_pkg_name in DEPENDENCIES_PYPI:
     metadata = requests.get(f'https://pypi.org/pypi/{dep_pkg_name}/json').json()
     latest_release = metadata['info']['version']
     url = metadata['releases'][latest_release][-1]['url']
@@ -75,6 +81,10 @@ def copy_dependencies():
       # this works if it's a simple .py file
       shutil.move(os.path.join(tmpdir, dirname, f'{dep_pkg_name}.py'), 'package')
 
+def copy_dependencies_from_local():
+  for dep_pkg_name in DEPENDENCIES_LOCAL:
+    dirname = os.path.join(glob.glob(f'/usr/lib/python3.6/site-packages/{dep_pkg_name}*')[0], dep_pkg_name)
+    shutil.copytree(dirname, f'package/{dep_pkg_name}', ignore=shutil.ignore_patterns('__pycache__'))
 
 def create_package_zip_file():
   subprocess.check_call(['zip', '../package.zip', '-r', '.'], cwd='package')
@@ -82,5 +92,6 @@ def create_package_zip_file():
 
 prepare_package_dir_and_zip()
 copy_source_files()
-copy_dependencies()
+copy_dependencies_from_pypi()
+copy_dependencies_from_local()
 create_package_zip_file()
