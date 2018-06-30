@@ -20,6 +20,8 @@ DEPENDENCIES_PYPI = [
 DEPENDENCIES_LOCAL = [
   'chinese_vocab_list',
   'chineseflashcards',
+  'pystache',
+  'yaml',
 ]
 
 PACKAGE_CACHE_DIR = 'package_cache'
@@ -83,7 +85,10 @@ def copy_dependencies_from_pypi():
 
 def copy_dependencies_from_local():
   for dep_pkg_name in DEPENDENCIES_LOCAL:
-    dirname = os.path.join(glob.glob(f'/usr/lib/python3.6/site-packages/{dep_pkg_name}*')[0], dep_pkg_name)
+    dirname = glob.glob(f'/usr/lib/python3.6/site-packages/{dep_pkg_name}*')[0]
+    subdirname = os.path.join(dirname, dep_pkg_name)
+    if os.path.exists(subdirname):
+      dirname = subdirname
     shutil.copytree(dirname, f'package/{dep_pkg_name}', ignore=shutil.ignore_patterns('__pycache__'))
 
 def create_package_zip_file():
