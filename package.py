@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import glob
 import os
+import re
 import requests
 import shutil
 import subprocess
@@ -83,13 +84,23 @@ def copy_dependencies_from_pypi():
       # this works if it's a simple .py file
       shutil.move(os.path.join(tmpdir, dirname, f'{dep_pkg_name}.py'), 'package')
 
+def _extract_version(path):
+  dirname = os.path.split(path)[-1]
+  return re.search(r'[0-9]+(\.[0-9]+)*', dirname).group(0)
+
+def _version_to_tuple(ver_str):
+  return tuple(int(piece) for piece in ver_str.split('.'))
+
 def copy_dependencies_from_local():
   for dep_pkg_name in DEPENDENCIES_LOCAL:
-    dirname = glob.glob(f'/usr/lib/python3.6/site-packages/{dep_pkg_name}*')[0]
-    subdirname = os.path.join(dirname, dep_pkg_name)
-    if os.path.exists(subdirname):
-      dirname = subdirname
-    shutil.copytree(dirname, f'package/{dep_pkg_name}', ignore=shutil.ignore_patterns('__pycache__'))
+    dirpaths = glob.glob(f'/usr/lib/python3.6/site-packages/{dep_pkg_name}*')
+    if len(dirpaths) > 1:
+      dirpaths.sort(key=lambda p: _version_to_tuple(_extract_version(p)))
+    dirpath = dirpaths[-1]
+    subdirpath = os.path.join(dirpath, dep_pkg_name)
+    if os.path.exists(subdirpath):
+      dirpath = subdirpath
+    shutil.copytree(dirpath, f'package/{dep_pkg_name}', ignore=shutil.ignore_patterns('__pycache__'))
 
 def create_package_zip_file():
   subprocess.check_call(['zip', '../package.zip', '-r', '.'], cwd='package')
