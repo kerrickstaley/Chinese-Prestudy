@@ -1,3 +1,7 @@
+import os.path
+import sys
+sys.path.append(os.path.dirname(__file__))
+
 # import the main window object (mw) from aqt
 from aqt import mw
 # import all of the Qt GUI library
