@@ -6,7 +6,6 @@ sys.path.append(os.path.dirname(__file__))
 from aqt import mw
 # import all of the Qt GUI library
 from aqt.qt import *
-import anki.storage
 from PyQt5 import QtCore
 import logging
 # TODO need to package this with the extension
