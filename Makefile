@@ -1,6 +1,6 @@
 test:
 	cp __init__.py chinese_prestudy.py
-	python -m pytest -v tests/
+	python -m pytest -vv tests/
 
 package.zip:  __init__.py
 	./package.py
