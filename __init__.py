@@ -20,13 +20,14 @@ import chineseflashcards
 import genanki
 
 try:
-  from typing import List, Optional, Set
+    from typing import List, Optional, Set, Tuple
 except ImportError:
-# Temporary hack until typing module is supported.
-  from collections import defaultdict
-  List = defaultdict(lambda: None)
-  Optional = defaultdict(lambda: None)
-  Set = defaultdict(lambda: None)
+    # Temporary hack until typing module is supported.
+    from collections import defaultdict
+    List = defaultdict(lambda: None)
+    Optional = defaultdict(lambda: None)
+    Set = defaultdict(lambda: None)
+    Tuple = defaultdict(lambda: None)
 
 
 def is_chinese_word(s):
