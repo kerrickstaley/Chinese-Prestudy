@@ -87,6 +87,16 @@ class ChinesePrestudy:
         self.show_words_window()
 
     @cached_property
+    def input_segmented(self) -> List[str]:
+        """
+        Return the input after segmenting into words.
+        """
+        jieba.setLogLevel(logging.ERROR)
+        jieba.initialize()
+
+        return list(jieba.cut(self.input_text))
+
+    @cached_property
     def input_words(self) -> List[str]:
         """
         Return unique words in text, as a list, sorted by order of appearance in text.
@@ -94,10 +104,7 @@ class ChinesePrestudy:
         rv = []
         seen_words = set()
 
-        jieba.setLogLevel(logging.ERROR)
-        jieba.initialize()
-
-        for word in jieba.cut(self.input_text):
+        for word in self.input_segmented:
             if word in seen_words:
                 continue
             if not is_chinese_word(word):
@@ -227,6 +234,34 @@ class ChinesePrestudy:
         not_new = words_for_query('-is:new')
 
         return not_new | (suspended - not_suspended)
+
+    @property
+    def input_with_hard_words_annotated(self) -> List[Tuple[str, Optional[chinese_vocab_list.VocabWord]]]:
+        """
+        Returns the input text, with "hard" words (words that are unknown and are above the study limit) annotated with
+        definitions.
+
+        The return format is a sequence of tuples (word, defn), where defn is None if the word is already known.
+        Punctuation and newlines will also have their own tuples (with a None defn). It should be true that:
+
+            ''.join(elem[0] for elem in self.input_with_hard_words_annotated) == self.input_text
+        """
+        # TODO we currently only cover words that appear in the Chinese Vocab List. Instead, we should synthesize
+        #     VocabWords when they aren't in the vocab list.
+        # TODO We're assuming simplified characters here.
+        definitions = {word.simp: word for word in self.all_words_to_study if word is not None}
+        to_define_set = set(definitions)
+        to_define_set -= set(word.simp for word in self.words_to_study)
+
+        rv = []
+        for seg in self.input_segmented:
+            if seg in to_define_set:
+                rv.append((seg, definitions[seg]))
+                to_define_set.remove(seg)
+            else:
+                rv.append((seg, None))
+
+        return rv
 
     @cached_property
     def vocab_list(self):
