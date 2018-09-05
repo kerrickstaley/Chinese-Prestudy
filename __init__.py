@@ -19,6 +19,8 @@ import chineseflashcards
 # TODO need to package this with the extension
 import genanki
 
+RECOMMENDED_TARGET_VOCAB_SIZE = 3500
+
 try:
     from typing import List, Optional, Set, Tuple
 except ImportError:
@@ -124,13 +126,13 @@ class ChinesePrestudy:
         vbox = QVBoxLayout()
         vbox.addWidget(QLabel('Enter your vocab size target:'))
 
-        self.vocab_hsk_5_radio = QRadioButton('3000 (HSK 5+)')
+        self.vocab_recommended_radio = QRadioButton('{} (Recommended)'.format(RECOMMENDED_TARGET_VOCAB_SIZE))
         self.vocab_custom_radio = QRadioButton('Custom: ')
         self.vocab_custom_box = LineEditWithFocusedSignal()
 
         radio_hbox = QHBoxLayout()
         radio_hbox.addStretch(1)
-        radio_hbox.addWidget(self.vocab_hsk_5_radio)
+        radio_hbox.addWidget(self.vocab_recommended_radio)
         radio_hbox.addStretch(2)
         radio_hbox.addWidget(self.vocab_custom_radio)
         radio_hbox.addWidget(self.vocab_custom_box)
@@ -154,7 +156,7 @@ class ChinesePrestudy:
 
         # TODO: for some reason, this disables the blinking cursor in `vocab_custom_box`
         self.vocab_custom_box.focused.connect(lambda: self.vocab_custom_radio.click())
-        self.vocab_hsk_5_radio.clicked.connect(lambda: self.update_words_and_defs_table())
+        self.vocab_recommended_radio.clicked.connect(lambda: self.update_words_and_defs_table())
         self.vocab_custom_radio.clicked.connect(lambda: self.update_words_and_defs_table())
         self.vocab_custom_box.textChanged.connect(lambda: self.update_words_and_defs_table())
         continue_button.clicked.connect(lambda: self.words_window_continue_action())
@@ -174,8 +176,8 @@ class ChinesePrestudy:
 
     @property
     def word_target(self):
-        if self.vocab_hsk_5_radio.isChecked():
-            return 3000
+        if self.vocab_recommended_radio.isChecked():
+            return RECOMMENDED_TARGET_VOCAB_SIZE
         if self.vocab_custom_radio.isChecked():
             try:
                 return int(self.vocab_custom_box.text())
