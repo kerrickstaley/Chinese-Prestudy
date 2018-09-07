@@ -281,8 +281,6 @@ class ChinesePrestudy:
     def words_window_continue_action(self):
         final_touches_window = FinalTouchesWindow(self.words_to_study)
 
-        print(self.input_with_hard_words_annotated)
-
         self.words_window.close()
         final_touches_window.show()
 
