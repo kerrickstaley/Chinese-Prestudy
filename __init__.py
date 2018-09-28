@@ -8,15 +8,10 @@ from aqt import mw
 from aqt.qt import *
 from PyQt5 import QtCore
 import logging
-# TODO need to package this with the extension
 import jieba
-# TODO need to package this with the extension
 from cached_property import cached_property
-# TODO need to package this with the extension
 import chinesevocablist
-# TODO need to package this with the extension
 import chineseflashcards
-# TODO need to package this with the extension
 import genanki
 
 RECOMMENDED_TARGET_VOCAB_SIZE = 3500
