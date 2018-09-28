@@ -13,7 +13,7 @@ import jieba
 # TODO need to package this with the extension
 from cached_property import cached_property
 # TODO need to package this with the extension
-import chinese_vocab_list
+import chinesevocablist
 # TODO need to package this with the extension
 import chineseflashcards
 # TODO need to package this with the extension
@@ -171,7 +171,7 @@ class ChinesePrestudy:
             self.words_and_defs_table.setItem(i, 1, QTableWidgetItem(word.defs[0]))
 
     @property
-    def words_to_study(self) -> List[chinese_vocab_list.VocabWord]:
+    def words_to_study(self) -> List[chinesevocablist.VocabWord]:
         return self.get_words_to_study(self.word_target)
 
     @property
@@ -185,7 +185,7 @@ class ChinesePrestudy:
                 return 0
         return 0
 
-    def get_words_to_study(self, target) -> List[chinese_vocab_list.VocabWord]:
+    def get_words_to_study(self, target) -> List[chinesevocablist.VocabWord]:
         words = [w for w in self.all_words_to_study[:target] if w is not None]
 
         # re-sort to match input order
@@ -199,7 +199,7 @@ class ChinesePrestudy:
         return sorted(words, key=index)
 
     @cached_property
-    def all_words_to_study(self) -> List[Optional[chinese_vocab_list.VocabWord]]:
+    def all_words_to_study(self) -> List[Optional[chinesevocablist.VocabWord]]:
         """
         Returns `vocab_list.words`, with `None` replacing elements that aren't in `input_text`.
 
@@ -238,7 +238,7 @@ class ChinesePrestudy:
         return not_new | (suspended - not_suspended)
 
     @property
-    def input_with_hard_words_annotated(self) -> List[Tuple[str, Optional[chinese_vocab_list.VocabWord]]]:
+    def input_with_hard_words_annotated(self) -> List[Tuple[str, Optional[chinesevocablist.VocabWord]]]:
         """
         Returns the input text, with "hard" words (words that are unknown and are above the study limit) annotated with
         definitions.
@@ -267,7 +267,7 @@ class ChinesePrestudy:
 
     @cached_property
     def vocab_list(self):
-        return chinese_vocab_list.VocabList.load()
+        return chinesevocablist.VocabList.load()
 
     def init_words_and_defs_table(self, parent=None):
         """
@@ -290,7 +290,7 @@ class FinalTouchesWindow(QWidget):
     Window 3/3, allows the user to set deck and tags.
     """
 
-    def __init__(self, vocab_words: List[chinese_vocab_list.VocabWord]):
+    def __init__(self, vocab_words: List[chinesevocablist.VocabWord]):
         super().__init__(mw, flags=QtCore.Qt.Window)
         self.vocab_words = vocab_words
         self.init_layout()
@@ -339,7 +339,7 @@ class FinalTouchesWindow(QWidget):
         self.close()
 
 
-def add_notes(vocab_words: List[chinese_vocab_list.VocabWord], deck_name: str, tags: List[str]):
+def add_notes(vocab_words: List[chinesevocablist.VocabWord], deck_name: str, tags: List[str]):
     # get dict that describes deck
     deck = [d for d in mw.col.decks.decks.values() if d['name'] == deck_name][0]
 

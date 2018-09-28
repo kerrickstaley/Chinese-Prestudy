@@ -18,7 +18,7 @@ DEPENDENCIES_PYPI = [
 ]
 
 DEPENDENCIES_LOCAL = [
-  'chinese_vocab_list',
+  'chinesevocablist',
   'chineseflashcards',
   'pystache',
   'yaml',
