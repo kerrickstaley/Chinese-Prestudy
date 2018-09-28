@@ -5,6 +5,9 @@ test:
 package.zip:  __init__.py
 	./package.py
 
+.PHONY: package
+package: package.zip
+
 .PHONY: install
 install: package.zip
 	rm -rf package
