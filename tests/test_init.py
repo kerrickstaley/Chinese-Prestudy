@@ -2,7 +2,7 @@ import mock
 import types
 import sys
 
-from chinese_vocab_list import VocabWord
+from chinesevocablist import VocabWord
 
 
 def mock_imports():
