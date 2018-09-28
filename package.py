@@ -84,15 +84,16 @@ def copy_dependencies_from_pypi():
       # this works if it's a simple .py file
       shutil.move(os.path.join(tmpdir, dirname, f'{dep_pkg_name}.py'), 'package')
 
-
 def _extract_version(path):
   dirname = os.path.split(path)[-1]
   return re.search(r'[0-9]+(\.[0-9]+)*', dirname).group(0)
 
-
-def _version_to_tuple(ver_str):
-  return tuple(int(piece) for piece in ver_str.split('.'))
-
+def _path_to_sort_tuple(path):
+  # higher is better
+  version_tuple = tuple(int(piece) for piece in _extract_version(path).split('.'))
+  # prefer a package (rank higher) if it is user (rather than system)
+  is_user = path.startswith(f'{os.environ["HOME"]}/.local/')
+  return (is_user,) + version_tuple
 
 def copy_dependencies_from_local():
   for dep_pkg_name in DEPENDENCIES_LOCAL:
@@ -100,7 +101,7 @@ def copy_dependencies_from_local():
       glob.glob(f'/usr/lib/python3.*/site-packages/{dep_pkg_name}*')
       + glob.glob(f'{os.environ["HOME"]}/.local/lib/python3.*/site-packages/{dep_pkg_name}*'))
     if len(dirpaths) > 1:
-      dirpaths.sort(key=lambda p: _version_to_tuple(_extract_version(p)))
+      dirpaths.sort(key=lambda p: _path_to_sort_tuple(p))
     dirpath = dirpaths[-1]
     subdirpath = os.path.join(dirpath, dep_pkg_name)
     if os.path.exists(subdirpath):
