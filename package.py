@@ -96,7 +96,9 @@ def _version_to_tuple(ver_str):
 
 def copy_dependencies_from_local():
   for dep_pkg_name in DEPENDENCIES_LOCAL:
-    dirpaths = glob.glob(f'/usr/lib/python3.*/site-packages/{dep_pkg_name}*')
+    dirpaths = (
+      glob.glob(f'/usr/lib/python3.*/site-packages/{dep_pkg_name}*')
+      + glob.glob(f'{os.environ["HOME"]}/.local/lib/python3.*/site-packages/{dep_pkg_name}*'))
     if len(dirpaths) > 1:
       dirpaths.sort(key=lambda p: _version_to_tuple(_extract_version(p)))
     dirpath = dirpaths[-1]
