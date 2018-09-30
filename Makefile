@@ -1,4 +1,19 @@
-test:
+.PHONY: install_deps
+install_deps:
+	pip install -r requirements.txt --user
+
+.PHONY: install_deps_venv
+install_deps_venv:
+	pip install -r requirements.txt
+
+.PHONY: test
+test: install_deps test_inner
+
+.PHONY: test_venv
+test_venv: install_deps_venv test_inner
+
+.PHONY: test_inner
+test_inner:
 	cp __init__.py chinese_prestudy.py
 	python -m pytest -vv tests/
 

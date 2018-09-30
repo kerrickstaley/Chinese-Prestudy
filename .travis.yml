@@ -2,5 +2,5 @@ language: python
 python:
   - '3.6'
 dist: trusty
-install: 'true'
-script: 'true'
+install: 'make install_deps_venv'
+script: 'make test_venv'
