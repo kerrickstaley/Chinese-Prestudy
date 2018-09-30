@@ -1,0 +1,10 @@
+jieba
+cached_property
+chinesevocablist
+chineseflashcards
+pystache
+pyyaml
+genanki
+# these two are needed for testing but aren't packaged with the add-on
+pytest
+pyqt5
