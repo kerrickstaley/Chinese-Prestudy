@@ -99,7 +99,7 @@ def copy_dependencies_from_local():
   for dep_pkg_name in DEPENDENCIES_LOCAL:
     dirpaths = (
       glob.glob(f'/usr/lib/python3.*/site-packages/{dep_pkg_name}*')
-      + glob.glob(f'{os.environ["HOME"]}/.local/lib/python3.*/site-packages/{dep_pkg_name}*'))
+      + glob.glob(f'{os.environ["HOME"]}/.local/lib/python3.*/site-packages/{dep_pkg_name}*[0-9]*'))
     if len(dirpaths) > 1:
       dirpaths.sort(key=lambda p: _path_to_sort_tuple(p))
     dirpath = dirpaths[-1]
