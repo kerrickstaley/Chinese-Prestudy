@@ -113,6 +113,7 @@ def copy_dependencies_from_local():
 
 
 def create_package_zip_file():
+  shutil.copy('manifest.json', 'package/')
   subprocess.check_call(['zip', f'../{OUTPUT_FILE_NAME}', '-r', '.'], cwd='package')
 
 
