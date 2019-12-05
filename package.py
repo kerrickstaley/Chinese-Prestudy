@@ -27,12 +27,14 @@ DEPENDENCIES_LOCAL = [
 
 PACKAGE_CACHE_DIR = 'package_cache'
 
+OUTPUT_FILE_NAME = "package.ankiaddon"
+
 
 def prepare_package_dir_and_zip():
   shutil.rmtree('package', ignore_errors=True)
   os.mkdir('package')
   try:
-    os.remove('package.zip')
+    os.remove(OUTPUT_FILE_NAME)
   except OSError as e:
     if e.errno != 2:
       raise
@@ -111,7 +113,7 @@ def copy_dependencies_from_local():
 
 
 def create_package_zip_file():
-  subprocess.check_call(['zip', '../package.zip', '-r', '.'], cwd='package')
+  subprocess.check_call(['zip', f'../{OUTPUT_FILE_NAME}', '-r', '.'], cwd='package')
 
 
 prepare_package_dir_and_zip()
