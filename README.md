@@ -30,3 +30,9 @@ make test
 ```
 
 Some changes may belong in `chinesevocablist`, `chineseflashcards`, or `genanki`. If you want to change one of these packages, check it out from GitHub, make your change, and then run `make install` in the package's directory followed by `make install` in this directory and restart Anki.
+
+## Publishing
+If your name is Kerrick, you can publish new versions to AnkiWeb by following these steps:
+1. Run `./package.py` to generate `package.ankiaddon`.
+2. Install `package.ankiaddon` in Anki, and restart. Test thoroughly.
+3. Go to https://ankiweb.net/shared/upload?id=882364911 and upload the new version of the package.
