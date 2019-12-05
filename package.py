@@ -16,11 +16,11 @@ DEPENDENCIES_PYPI = [
   'jieba',
   'cached_property',
   'genanki',
+  'chinesevocablist',
+  'chineseflashcards',
 ]
 
 DEPENDENCIES_LOCAL = [
-  'chinesevocablist',
-  'chineseflashcards',
   'pystache',
   'yaml',
 ]
