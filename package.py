@@ -12,17 +12,15 @@ SOURCE_FILES = [
   '__init__.py',
 ]
 
+# tuple of pypi_package_name, module_name
 DEPENDENCIES_PYPI = [
-  'jieba',
-  'cached_property',
-  'genanki',
-  'chinesevocablist',
-  'chineseflashcards',
-]
-
-DEPENDENCIES_LOCAL = [
-  'pystache',
-  'yaml',
+  ('jieba', 'jieba'),
+  ('cached_property', 'cached_property'),
+  ('genanki', 'genanki'),
+  ('chinesevocablist', 'chinesevocablist'),
+  ('chineseflashcards', 'chineseflashcards'),
+  ('pyyaml', 'yaml'),
+  ('pystache', 'pystache'),
 ]
 
 PACKAGE_CACHE_DIR = 'package_cache'
@@ -59,10 +57,9 @@ def retrieve_with_cache(url, dest_path):
 
   shutil.copy(cached_path, dest_path)
 
-
 def copy_dependencies_from_pypi():
-  for dep_pkg_name in DEPENDENCIES_PYPI:
-    metadata = requests.get(f'https://pypi.org/pypi/{dep_pkg_name}/json').json()
+  for pypi_name, mod_name in DEPENDENCIES_PYPI:
+    metadata = requests.get(f'https://pypi.org/pypi/{pypi_name}/json').json()
     latest_release = metadata['info']['version']
     url = metadata['releases'][latest_release][-1]['url']
     filename = url.split('/')[-1]
@@ -81,10 +78,15 @@ def copy_dependencies_from_pypi():
 
     try:
       # this works if it's a directory
-      shutil.move(os.path.join(tmpdir, dirname, dep_pkg_name), 'package')
+      shutil.move(os.path.join(tmpdir, dirname, mod_name), 'package')
     except FileNotFoundError:
-      # this works if it's a simple .py file
-      shutil.move(os.path.join(tmpdir, dirname, f'{dep_pkg_name}.py'), 'package')
+      try:
+        # this works if it's a simple .py file
+        shutil.move(os.path.join(tmpdir, dirname, f'{mod_name}.py'), 'package')
+      except FileNotFoundError:
+        # This is for PyYAML
+        shutil.move(os.path.join(tmpdir, dirname, 'lib3', mod_name), 'package')
+
 
 def _extract_version(path):
   dirname = os.path.split(path)[-1]
@@ -97,20 +99,6 @@ def _path_to_sort_tuple(path):
   is_user = path.startswith(f'{os.environ["HOME"]}/.local/')
   return (is_user,) + version_tuple
 
-def copy_dependencies_from_local():
-  for dep_pkg_name in DEPENDENCIES_LOCAL:
-    dirpaths = (
-      glob.glob(f'/usr/lib/python3.*/site-packages/{dep_pkg_name}*')
-      + glob.glob(f'{os.environ["HOME"]}/.local/lib/python3.*/site-packages/{dep_pkg_name}*'))
-    dirpaths = [path for path in dirpaths if os.path.isdir(path)]
-    if len(dirpaths) > 1:
-      dirpaths.sort(key=lambda p: _path_to_sort_tuple(p))
-    dirpath = dirpaths[-1]
-    subdirpath = os.path.join(dirpath, dep_pkg_name)
-    if os.path.exists(subdirpath):
-      dirpath = subdirpath
-    shutil.copytree(dirpath, f'package/{dep_pkg_name}', ignore=shutil.ignore_patterns('__pycache__'))
-
 
 def create_package_zip_file():
   shutil.copy('manifest.json', 'package/')
@@ -120,5 +108,4 @@ def create_package_zip_file():
 prepare_package_dir_and_zip()
 copy_source_files()
 copy_dependencies_from_pypi()
-copy_dependencies_from_local()
 create_package_zip_file()

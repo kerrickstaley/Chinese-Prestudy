@@ -17,18 +17,18 @@ test_inner:
 	cp __init__.py chinese_prestudy.py
 	python -m pytest -vv tests/
 
-package.zip:  __init__.py
+package.ankiaddon:  __init__.py
 	./package.py
 
 .PHONY: package
-package: package.zip
+package: package.ankiaddon
 
 .PHONY: install
-install: package.zip
+install: package.ankiaddon
 	rm -rf package
 	mkdir package
-	cp package.zip package
-	cd package && unzip package.zip
-	rm package/package.zip
+	cp package.ankiaddon package
+	cd package && unzip package.ankiaddon
+	rm package/package.ankiaddon
 	rm -rf "${HOME}"/.local/share/Anki2/addons21/chinese_prestudy
 	cp -r package "${HOME}"/.local/share/Anki2/addons21/chinese_prestudy
