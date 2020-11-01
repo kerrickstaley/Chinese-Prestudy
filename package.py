@@ -10,6 +10,7 @@ from urllib import request
 
 SOURCE_FILES = [
   '__init__.py',
+  'config.json',
 ]
 
 # tuple of pypi_package_name, module_name

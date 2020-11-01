@@ -14,7 +14,8 @@ import chinesevocablist
 import chineseflashcards
 import genanki
 
-RECOMMENDED_TARGET_VOCAB_SIZE = 3500
+RECOMMENDED_LEARN_WORDS_NUM = 3500
+RECOMMENDED_SKIP_WORDS_NUM = 0
 
 try:
     from typing import List, Optional, Set, Tuple
@@ -118,22 +119,29 @@ class ChinesePrestudy:
         """
         self.words_window = QWidget(mw, flags=QtCore.Qt.Window)
 
+        config = mw.addonManager.getConfig(__name__)
+        config.setdefault('study_words_num', RECOMMENDED_LEARN_WORDS_NUM)
+        config.setdefault('skip_words_num', RECOMMENDED_SKIP_WORDS_NUM)
+
         vbox = QVBoxLayout()
-        vbox.addWidget(QLabel('Enter your vocab size target:'))
 
-        self.vocab_recommended_radio = QRadioButton('{} (Recommended)'.format(RECOMMENDED_TARGET_VOCAB_SIZE))
-        self.vocab_custom_radio = QRadioButton('Custom: ')
-        self.vocab_custom_box = LineEditWithFocusedSignal()
+        study_words_num_hbox = QHBoxLayout()
+        self.study_words_num_box = QLineEdit()
+        self.study_words_num_box.setText(str(config['study_words_num']))
+        study_words_num_hbox.addWidget(QLabel('Study the most common'))
+        study_words_num_hbox.addWidget(self.study_words_num_box)
+        study_words_num_hbox.addWidget(QLabel('words (recommended: {})'.format(RECOMMENDED_LEARN_WORDS_NUM)))
+        study_words_num_hbox.addStretch(1)
+        vbox.addLayout(study_words_num_hbox)
 
-        radio_hbox = QHBoxLayout()
-        radio_hbox.addStretch(1)
-        radio_hbox.addWidget(self.vocab_recommended_radio)
-        radio_hbox.addStretch(2)
-        radio_hbox.addWidget(self.vocab_custom_radio)
-        radio_hbox.addWidget(self.vocab_custom_box)
-        radio_hbox.addStretch(1)
-        vbox.addLayout(radio_hbox)
-
+        skip_words_num_hbox = QHBoxLayout()
+        self.skip_words_num_box = QLineEdit()
+        self.skip_words_num_box.setText(str(config['skip_words_num']))
+        skip_words_num_hbox.addWidget(QLabel('...skipping the most common'))
+        skip_words_num_hbox.addWidget(self.skip_words_num_box)
+        skip_words_num_hbox.addWidget(QLabel('words (recommended: {})'.format(RECOMMENDED_SKIP_WORDS_NUM)))
+        skip_words_num_hbox.addStretch(1)
+        vbox.addLayout(skip_words_num_hbox)
         vbox.addWidget(QLabel('These are the new words you should learn:'))
 
         self.words_and_defs_table = self.init_words_and_defs_table()
@@ -149,11 +157,8 @@ class ChinesePrestudy:
 
         self.update_words_and_defs_table()
 
-        # TODO: for some reason, this disables the blinking cursor in `vocab_custom_box`
-        self.vocab_custom_box.focused.connect(lambda: self.vocab_custom_radio.click())
-        self.vocab_recommended_radio.clicked.connect(lambda: self.update_words_and_defs_table())
-        self.vocab_custom_radio.clicked.connect(lambda: self.update_words_and_defs_table())
-        self.vocab_custom_box.textChanged.connect(lambda: self.update_words_and_defs_table())
+        self.study_words_num_box.textChanged.connect(lambda: self.update_words_and_defs_table())
+        self.skip_words_num_box.textChanged.connect(lambda: self.update_words_and_defs_table())
         continue_button.clicked.connect(lambda: self.words_window_continue_action())
 
         self.words_window.show()
@@ -161,27 +166,30 @@ class ChinesePrestudy:
     def update_words_and_defs_table(self):
         words_to_study = self.words_to_study
         self.words_and_defs_table.setRowCount(len(words_to_study))
-        for i, word in enumerate(self.words_to_study):
+        for i, word in enumerate(words_to_study):
             self.words_and_defs_table.setItem(i, 0, QTableWidgetItem(word.simp))
             self.words_and_defs_table.setItem(i, 1, QTableWidgetItem(word.defs[0]))
 
     @property
     def words_to_study(self) -> List[chinesevocablist.VocabWord]:
-        return self.get_words_to_study(self.word_target)
+        return self.get_words_to_study(self.study_words_num, self.skip_words_num)
 
     @property
-    def word_target(self):
-        if self.vocab_recommended_radio.isChecked():
-            return RECOMMENDED_TARGET_VOCAB_SIZE
-        if self.vocab_custom_radio.isChecked():
-            try:
-                return int(self.vocab_custom_box.text())
-            except ValueError:
-                return 0
-        return 0
+    def study_words_num(self):
+        try:
+            return int(self.study_words_num_box.text())
+        except ValueError:
+            return 0
 
-    def get_words_to_study(self, target) -> List[chinesevocablist.VocabWord]:
-        words = [w for w in self.all_words_to_study[:target] if w is not None]
+    @property
+    def skip_words_num(self):
+        try:
+            return int(self.skip_words_num_box.text())
+        except ValueError:
+            return 0
+
+    def get_words_to_study(self, study_words_num, skip_words_num) -> List[chinesevocablist.VocabWord]:
+        words = [w for w in self.all_words_to_study[skip_words_num:study_words_num] if w is not None]
 
         # re-sort to match input order
         # TODO this is inefficient
@@ -274,6 +282,11 @@ class ChinesePrestudy:
         return QTableWidget(0, 2, parent)
 
     def words_window_continue_action(self):
+        config = mw.addonManager.getConfig(__name__)
+        config['study_words_num'] = self.study_words_num
+        config['skip_words_num'] = self.skip_words_num
+        mw.addonManager.writeConfig(__name__, config)
+
         final_touches_window = FinalTouchesWindow(self.words_to_study)
 
         self.words_window.close()
