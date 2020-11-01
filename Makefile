@@ -1,5 +1,7 @@
 .PHONY: install_deps
 install_deps:
+	# TODO: Use the Python zipfile module so we can remove this dependency.
+	zip --version > /dev/null || { echo 'Error: Please install the "zip" utility using your system package manager (e.g. apt)'; exit 1; }
 	pip install -r requirements.txt --user
 
 .PHONY: install_deps_venv
