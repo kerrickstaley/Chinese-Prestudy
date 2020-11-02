@@ -124,6 +124,17 @@ def patch_pystache(path_to_pystache_module):
   with open(path_to_parser_py, 'w') as f:
     f.write(''.join(lines))
 
+  path_to_common_py = os.path.join(path_to_pystache_module, 'common.py')
+
+  with open(path_to_common_py) as f:
+    lines = list(f.readlines())
+
+  for i in range(len(lines)):
+    lines[i] = lines[i].replace("(unicode", "(type(u'a')")
+
+  with open(path_to_common_py, 'w') as f:
+    f.write(''.join(lines))
+
 
 prepare_package_dir_and_zip()
 copy_source_files()
