@@ -88,10 +88,13 @@ def copy_dependencies_from_pypi():
         # This is for PyYAML
         shutil.move(os.path.join(tmpdir, dirname, 'lib3', mod_name), 'package')
 
+  patch_pystache(os.path.join('package', 'pystache'))
+
 
 def _extract_version(path):
   dirname = os.path.split(path)[-1]
   return re.search(r'[0-9]+(\.[0-9]+)*', dirname).group(0)
+
 
 def _path_to_sort_tuple(path):
   # higher is better
@@ -104,6 +107,22 @@ def _path_to_sort_tuple(path):
 def create_package_zip_file():
   shutil.copy('manifest.json', 'package/')
   subprocess.check_call(['zip', f'../{OUTPUT_FILE_NAME}', '-r', '.'], cwd='package')
+
+
+def patch_pystache(path_to_pystache_module):
+  # pystache causes a syntax error due to Python-2-only syntax on some installations; see
+  # https://github.com/kerrickstaley/Chinese-Prestudy/issues/16
+  # Because pystache is not actively maintained, we patch it ourselves.
+  path_to_parser_py = os.path.join(path_to_pystache_module, 'parser.py')
+
+  with open(path_to_parser_py) as f:
+    lines = list(f.readlines())
+
+  for i in range(len(lines)):
+    lines[i] = lines[i].replace("ur'", "r'")
+
+  with open(path_to_parser_py, 'w') as f:
+    f.write(''.join(lines))
 
 
 prepare_package_dir_and_zip()
