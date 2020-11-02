@@ -87,8 +87,8 @@ def mock_vocab_list(new=None):
   return mock.patch.object(ChinesePrestudy, 'vocab_list', new=mock.PropertyMock(return_value=new))
 
 
-def mock_word_target(new=3):
-  return mock.patch.object(ChinesePrestudy, 'word_target', new=mock.PropertyMock(return_value=new))
+def mock_study_words_num(new=3):
+  return mock.patch.object(ChinesePrestudy, 'study_words_num', new=mock.PropertyMock(return_value=new))
 
 
 def test_input_words():
@@ -109,7 +109,7 @@ def test_unknown_words():
 def test_input_with_hard_words_annotated():
   cp = ChinesePrestudy()
   cp.input_text = INPUT_TEXT
-  with mock_words_already_studied(), mock_vocab_list(), mock_word_target():
+  with mock_words_already_studied(), mock_vocab_list(), mock_study_words_num():
     assert cp.input_with_hard_words_annotated == [
       ('你好', None),
       ('！', None),
