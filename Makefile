@@ -19,7 +19,7 @@ test_inner:
 	cp __init__.py chinese_prestudy.py
 	python -m pytest -vv tests/
 
-package.ankiaddon:  __init__.py
+package.ankiaddon: __init__.py package.py
 	./package.py
 
 .PHONY: package

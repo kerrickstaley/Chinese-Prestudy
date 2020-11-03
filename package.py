@@ -110,19 +110,11 @@ def create_package_zip_file():
 
 
 def patch_pystache(path_to_pystache_module):
-  # pystache causes a syntax error due to Python-2-only syntax on some installations; see
-  # https://github.com/kerrickstaley/Chinese-Prestudy/issues/16
-  # Because pystache is not actively maintained, we patch it ourselves.
-  path_to_parser_py = os.path.join(path_to_pystache_module, 'parser.py')
-
-  with open(path_to_parser_py) as f:
-    lines = list(f.readlines())
-
-  for i in range(len(lines)):
-    lines[i] = lines[i].replace("ur'", "r'")
-
-  with open(path_to_parser_py, 'w') as f:
-    f.write(''.join(lines))
+  # pystache needs to have the 2to3 tool run on its codebase in order to be compatible with Python 3.
+  # Ordinarily this happens via the "use_2to3" option in pystache's setup.py, but we don't install pystache the normal
+  # way, so we have to call 2to3 ourselves.
+  # See https://github.com/kerrickstaley/Chinese-Prestudy/issues/19
+  subprocess.check_call(['2to3', '-w', '-n', '.'], cwd=path_to_pystache_module)
 
 
 prepare_package_dir_and_zip()
