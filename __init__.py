@@ -8,11 +8,11 @@ from aqt import mw
 from aqt.qt import *
 from PyQt5 import QtCore
 import logging
-import jieba
+from . import jieba
 from cached_property import cached_property
-import chinesevocablist
-import chineseflashcards
-import genanki
+from . import chinesevocablist
+from . import chineseflashcards
+from . import genanki
 
 RECOMMENDED_LEARN_WORDS_NUM = 3500
 RECOMMENDED_SKIP_WORDS_NUM = 0
