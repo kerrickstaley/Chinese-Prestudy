@@ -42,21 +42,13 @@ class LineEditWithFocusedSignal(QLineEdit):
         self.focused.emit()
 
 
-class ChinesePrestudy:
-    """
-    Class that manages all the state associated with the Chinese Prestudy add-on.
-    """
+class TextEntryWindow(QWidget):
+    def __init__(self):
+        super().__init__(mw, flags=Qt.WindowType.Window)
+        self.init_layout()
 
-    @classmethod
-    def instantiate_and_run(cls):
-        cls().show_text_entry_window()
-
-    def show_text_entry_window(self):
-        """
-        Show the first window of the utility. This window prompts the user to paste in some text.
-        """
-        self.text_entry_window = w = QWidget(mw, flags=Qt.WindowType.Window)
-        w.setWindowTitle('Chinese Prestudy')
+    def init_layout(self):
+        self.setWindowTitle('Chinese Prestudy')
 
         vbox = QVBoxLayout()
 
@@ -73,15 +65,24 @@ class ChinesePrestudy:
         hbox.addWidget(continue_button)
         vbox.addLayout(hbox)
 
-        w.setLayout(vbox)
-
-        w.show()
+        self.setLayout(vbox)
 
     def text_entry_continue_action(self):
-        self.input_text = self.input_text_box.toPlainText()
-        self.text_entry_window.close()
+        input_text = self.input_text_box.toPlainText()
+        self.close()
+        words_window = WordsWindow(input_text)
+        words_window.show()
 
-        self.show_words_window()
+
+class WordsWindow(QWidget):
+    """
+    Class that manages all the state associated with the Chinese Prestudy add-on.
+    """
+    def __init__(self, input_text):
+        super().__init__(mw, flags=Qt.WindowType.Window)
+        self.input_text = input_text
+        self.init_layout()
+        self.update_words_and_defs_table()
 
     @cached_property
     def input_segmented(self) -> List[str]:
@@ -112,12 +113,10 @@ class ChinesePrestudy:
 
         return rv
 
-    def show_words_window(self):
+    def init_layout(self):
         """
         Show the second window of the utility. This window shows the new words that were extracted from the text.
         """
-        self.words_window = QWidget(mw, flags=Qt.WindowType.Window)
-
         config = mw.addonManager.getConfig(__name__)
         config.setdefault('study_words_num', RECOMMENDED_LEARN_WORDS_NUM)
         config.setdefault('skip_words_num', RECOMMENDED_SKIP_WORDS_NUM)
@@ -152,15 +151,11 @@ class ChinesePrestudy:
         continue_hbox.addWidget(continue_button)
         vbox.addLayout(continue_hbox)
 
-        self.words_window.setLayout(vbox)
-
-        self.update_words_and_defs_table()
+        self.setLayout(vbox)
 
         self.study_words_num_box.textChanged.connect(lambda: self.update_words_and_defs_table())
         self.skip_words_num_box.textChanged.connect(lambda: self.update_words_and_defs_table())
-        continue_button.clicked.connect(lambda: self.words_window_continue_action())
-
-        self.words_window.show()
+        continue_button.clicked.connect(lambda: self.continue_action())
 
     def update_words_and_defs_table(self):
         words_to_study = self.words_to_study
@@ -280,7 +275,7 @@ class ChinesePrestudy:
         """
         return QTableWidget(0, 2, parent)
 
-    def words_window_continue_action(self):
+    def continue_action(self):
         config = mw.addonManager.getConfig(__name__)
         config['study_words_num'] = self.study_words_num
         config['skip_words_num'] = self.skip_words_num
@@ -288,7 +283,7 @@ class ChinesePrestudy:
 
         final_touches_window = FinalTouchesWindow(self.words_to_study)
 
-        self.words_window.close()
+        self.close()
         final_touches_window.show()
 
 
@@ -369,7 +364,7 @@ def add_notes(vocab_words: List[chinesevocablist.VocabWord], deck_name: str, tag
 
 # create a new menu item, "Chinese Prestudy"
 action = QAction('Chinese Prestudy', mw)
-# set it to call ChinesePrestudy.instantiate_and_run when it's clicked
-action.triggered.connect(ChinesePrestudy.instantiate_and_run)
+# set it to show a TextEntryWindow
+action.triggered.connect(lambda: TextEntryWindow().show())
 # and add it to the tools menu
 mw.form.menuTools.addAction(action)
