@@ -2,7 +2,7 @@ jieba
 cached_property
 chinesevocablist
 chineseflashcards
-pystache
+chevron
 pyyaml
 genanki
 # these two are needed for testing but aren't packaged with the add-on

@@ -21,7 +21,7 @@ DEPENDENCIES_PYPI = [
   ('chinesevocablist', 'chinesevocablist'),
   ('chineseflashcards', 'chineseflashcards'),
   ('pyyaml', 'yaml'),
-  ('pystache', 'pystache'),
+  ('chevron', 'chevron'),
 ]
 
 PACKAGE_CACHE_DIR = 'package_cache'
@@ -77,18 +77,15 @@ def copy_dependencies_from_pypi():
     else:
       raise Exception(f'Unrecognized package format! {filename}')
 
-    try:
-      # this works if it's a directory
-      shutil.move(os.path.join(tmpdir, dirname, mod_name), 'package')
-    except FileNotFoundError:
+    if mod_name == 'yaml':
+      shutil.move(os.path.join(tmpdir, dirname, 'lib', mod_name), 'package')
+    else:
       try:
+        # this works if it's a directory
+        shutil.move(os.path.join(tmpdir, dirname, mod_name), 'package')
+      except FileNotFoundError:
         # this works if it's a simple .py file
         shutil.move(os.path.join(tmpdir, dirname, f'{mod_name}.py'), 'package')
-      except FileNotFoundError:
-        # This is for PyYAML
-        shutil.move(os.path.join(tmpdir, dirname, 'lib3', mod_name), 'package')
-
-  patch_pystache(os.path.join('package', 'pystache'))
 
 
 def _extract_version(path):
@@ -107,14 +104,6 @@ def _path_to_sort_tuple(path):
 def create_package_zip_file():
   shutil.copy('manifest.json', 'package/')
   subprocess.check_call(['zip', f'../{OUTPUT_FILE_NAME}', '-r', '.'], cwd='package')
-
-
-def patch_pystache(path_to_pystache_module):
-  # pystache needs to have the 2to3 tool run on its codebase in order to be compatible with Python 3.
-  # Ordinarily this happens via the "use_2to3" option in pystache's setup.py, but we don't install pystache the normal
-  # way, so we have to call 2to3 ourselves.
-  # See https://github.com/kerrickstaley/Chinese-Prestudy/issues/19
-  subprocess.check_call(['2to3', '-w', '-n', '.'], cwd=path_to_pystache_module)
 
 
 prepare_package_dir_and_zip()
