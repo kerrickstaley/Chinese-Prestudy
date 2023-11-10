@@ -3,8 +3,8 @@ Chinese-Prestudy is an Anki 2.1 plugin that helps you generate flashcards for a 
 
 There is more information, including usage instructions, in [this blog post](https://www.kerrickstaley.com/2018/09/04/chinese-prestudy).
 
-[![Travis Build Status](https://travis-ci.com/kerrickstaley/Chinese-Prestudy.svg?branch=master)](https://travis-ci.com/kerrickstaley/Chinese-Prestudy)
-[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/github/kerrickstaley/Chinese-Prestudy?branch=master&svg=true)](https://ci.appveyor.com/project/kerrickstaley/Chinese-Prestudy)
+[![Travis Build Status](https://travis-ci.com/kerrickstaley/Chinese-Prestudy.svg?branch=main)](https://travis-ci.com/kerrickstaley/Chinese-Prestudy)
+[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/github/kerrickstaley/Chinese-Prestudy?branch=main&svg=true)](https://ci.appveyor.com/project/kerrickstaley/Chinese-Prestudy)
 
 ## Developing
 If you want to contribute back to this project, follow these instructions:
