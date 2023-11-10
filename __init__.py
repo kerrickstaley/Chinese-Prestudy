@@ -273,7 +273,9 @@ class WordsWindow(QWidget):
         :param word_def_pairs: list of (word, def) tuples
         :return: a widget
         """
-        return QTableWidget(0, 2, parent)
+        ret = QTableWidget(0, 2, parent)
+        ret.setHorizontalHeaderLabels(['Hanzi', 'English'])
+        return ret
 
     def continue_action(self):
         config = mw.addonManager.getConfig(__name__)
