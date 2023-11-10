@@ -25,6 +25,15 @@ package.ankiaddon: __init__.py package.py
 .PHONY: package
 package: package.ankiaddon
 
+uname := $(shell uname)
+ifeq ($(uname), Linux)
+    install_path := ${HOME}/.local/share/Anki2/addons21/chinese_prestudy
+else ifeq ($(uname), Darwin)
+    install_path := ${HOME}/Library/Application Support/Anki2/addons21/chinese_prestudy
+else
+    $(error Unknown OS ${uname})
+endif
+
 .PHONY: install
 install: package.ankiaddon
 	rm -rf package
@@ -32,5 +41,5 @@ install: package.ankiaddon
 	cp package.ankiaddon package
 	cd package && unzip package.ankiaddon
 	rm package/package.ankiaddon
-	rm -rf "${HOME}"/.local/share/Anki2/addons21/chinese_prestudy
-	cp -r package "${HOME}"/.local/share/Anki2/addons21/chinese_prestudy
+	rm -rf "${install_path}"
+	cp -r package "${install_path}"
