@@ -6,7 +6,6 @@ sys.path.append(os.path.dirname(__file__))
 from aqt import mw
 # import all of the Qt GUI library
 from aqt.qt import *
-from PyQt5 import QtCore
 import logging
 import jieba
 from cached_property import cached_property
@@ -56,7 +55,7 @@ class ChinesePrestudy:
         """
         Show the first window of the utility. This window prompts the user to paste in some text.
         """
-        self.text_entry_window = w = QWidget(mw, flags=QtCore.Qt.Window)
+        self.text_entry_window = w = QWidget(mw, flags=Qt.WindowType.Window)
         w.setWindowTitle('Chinese Prestudy')
 
         vbox = QVBoxLayout()
@@ -117,7 +116,7 @@ class ChinesePrestudy:
         """
         Show the second window of the utility. This window shows the new words that were extracted from the text.
         """
-        self.words_window = QWidget(mw, flags=QtCore.Qt.Window)
+        self.words_window = QWidget(mw, flags=Qt.WindowType.Window)
 
         config = mw.addonManager.getConfig(__name__)
         config.setdefault('study_words_num', RECOMMENDED_LEARN_WORDS_NUM)
@@ -299,7 +298,7 @@ class FinalTouchesWindow(QWidget):
     """
 
     def __init__(self, vocab_words: List[chinesevocablist.VocabWord]):
-        super().__init__(mw, flags=QtCore.Qt.Window)
+        super().__init__(mw, flags=Qt.WindowType.Window)
         self.vocab_words = vocab_words
         self.init_layout()
 
