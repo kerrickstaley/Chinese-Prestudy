@@ -17,7 +17,7 @@ test_venv: install_deps_venv test_inner
 .PHONY: test_inner
 test_inner:
 	cp __init__.py chinese_prestudy.py
-	python -m pytest -vv tests/
+	python3 -m pytest -vv tests/
 
 package.ankiaddon: __init__.py package.py
 	./package.py
