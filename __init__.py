@@ -12,6 +12,7 @@ from cached_property import cached_property
 import chinesevocablist
 import chineseflashcards
 import genanki
+import functools
 
 RECOMMENDED_LEARN_WORDS_NUM = 3500
 RECOMMENDED_SKIP_WORDS_NUM = 0
@@ -74,6 +75,40 @@ class TextEntryWindow(QWidget):
         words_window.show()
 
 
+class SelectedWords:
+    def __init__(self):
+        self._selected = {}
+        self._set_by_user = {}
+
+    @staticmethod
+    def _key(word):
+        return word.trad, word.simp
+
+    def _handle_state_change(self, key, state):
+        state = Qt.CheckState(state)
+        self._set_by_user[key] = True
+        if state == Qt.CheckState.Checked:
+            self._selected[key] = True
+        elif state == Qt.CheckState.Unchecked:
+            self._selected[key] = False
+        else:
+            raise RuntimeError(f'unexpected state: {state}')
+
+    def checkbox(self, word: chinesevocablist.VocabWord, default: bool) -> QCheckBox:
+        key = self._key(word)
+
+        if not self._set_by_user.setdefault(key, False):
+            self._selected[key] = default
+
+        ret = QCheckBox()
+        ret.setChecked(self._selected[key])
+        ret.stateChanged.connect(functools.partial(self._handle_state_change, key))
+        return ret
+
+    def selected(self, word: chinesevocablist.VocabWord) -> bool:
+        return self._selected[self._key(word)]
+
+
 class WordsWindow(QWidget):
     """
     Class that manages all the state associated with the Chinese Prestudy add-on.
@@ -81,6 +116,7 @@ class WordsWindow(QWidget):
     def __init__(self, input_text):
         super().__init__(mw, flags=Qt.WindowType.Window)
         self.input_text = input_text
+        self.selected_words = SelectedWords()
         self.init_layout()
         self.update_words_and_defs_table()
 
@@ -160,9 +196,16 @@ class WordsWindow(QWidget):
     def update_words_and_defs_table(self):
         words_to_study = self.words_to_study
         self.words_and_defs_table.setRowCount(len(words_to_study))
+
+        def set_flags(item):
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
+            return item
+
         for i, word in enumerate(words_to_study):
-            self.words_and_defs_table.setItem(i, 0, QTableWidgetItem(word.simp))
-            self.words_and_defs_table.setItem(i, 1, QTableWidgetItem(word.defs[0]))
+            self.words_and_defs_table.setItem(i, 0, set_flags(QTableWidgetItem(word.simp)))
+            self.words_and_defs_table.setItem(i, 1, set_flags(QTableWidgetItem(word.defs[0])))
+            checkbox = self.selected_words.checkbox(word, True)
+            self.words_and_defs_table.setCellWidget(i, 2, checkbox)
 
     @property
     def words_to_study(self) -> List[chinesevocablist.VocabWord]:
@@ -222,7 +265,7 @@ class WordsWindow(QWidget):
         # logic: a word is studied if there is a corresponding note with at least one card that is seen, or if there
         # is a corresponding note with all cards suspended
         def words_for_query(query):
-            notes = [mw.col.getNote(id_) for id_ in mw.col.findNotes(query)]
+            notes = [mw.col.getNote(id_) for id_ in mw.col.find_notes(query)]
             rv = set()
             for note in notes:
                 rv.update(f for f in note.fields if is_chinese_word(f))
@@ -273,8 +316,10 @@ class WordsWindow(QWidget):
         :param word_def_pairs: list of (word, def) tuples
         :return: a widget
         """
-        ret = QTableWidget(0, 2, parent)
-        ret.setHorizontalHeaderLabels(['Hanzi', 'English'])
+        ret = QTableWidget(0, 3, parent)
+        ret.setHorizontalHeaderLabels(['Hanzi', 'English', 'Add'])
+        ret.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        ret.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         return ret
 
     def continue_action(self):
@@ -283,7 +328,8 @@ class WordsWindow(QWidget):
         config['skip_words_num'] = self.skip_words_num
         mw.addonManager.writeConfig(__name__, config)
 
-        final_touches_window = FinalTouchesWindow(self.words_to_study)
+        final_touches_window = FinalTouchesWindow([
+            w for w in self.words_to_study if self.selected_words.selected(w)])
 
         self.close()
         final_touches_window.show()
