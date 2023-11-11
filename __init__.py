@@ -189,7 +189,6 @@ class WordsWindow(QWidget):
         self.close()
         final_touches_window.show()
 
-
     @cached_property
     def input_segmented(self) -> List[str]:
         """
