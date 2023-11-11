@@ -120,35 +120,6 @@ class WordsWindow(QWidget):
         self.init_layout()
         self.update_words_and_defs_table()
 
-    @cached_property
-    def input_segmented(self) -> List[str]:
-        """
-        Return the input after segmenting into words.
-        """
-        jieba.setLogLevel(logging.ERROR)
-        jieba.initialize()
-
-        return list(jieba.cut(self.input_text))
-
-    @cached_property
-    def input_words(self) -> List[str]:
-        """
-        Return unique words in text, as a list, sorted by order of appearance in text.
-        """
-        rv = []
-        seen_words = set()
-
-        for word in self.input_segmented:
-            if word in seen_words:
-                continue
-            if not is_chinese_word(word):
-                continue
-
-            seen_words.add(word)
-            rv.append(word)
-
-        return rv
-
     def init_layout(self):
         """
         Show the second window of the utility. This window shows the new words that were extracted from the text.
@@ -193,23 +164,103 @@ class WordsWindow(QWidget):
         self.skip_words_num_box.textChanged.connect(lambda: self.update_words_and_defs_table())
         continue_button.clicked.connect(lambda: self.continue_action())
 
-    def update_words_and_defs_table(self):
-        words_to_study = self.words_to_study
-        self.words_and_defs_table.setRowCount(len(words_to_study))
+    def init_words_and_defs_table(self, parent=None):
+        """
+        Generates a widget that displays a table of words and definitions.
 
-        def set_flags(item):
-            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
-            return item
+        :param word_def_pairs: list of (word, def) tuples
+        :return: a widget
+        """
+        ret = QTableWidget(0, 3, parent)
+        ret.setHorizontalHeaderLabels(['Hanzi', 'English', 'Add'])
+        ret.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        ret.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        return ret
 
-        for i, word in enumerate(words_to_study):
-            self.words_and_defs_table.setItem(i, 0, set_flags(QTableWidgetItem(word.simp)))
-            self.words_and_defs_table.setItem(i, 1, set_flags(QTableWidgetItem(word.defs[0])))
-            checkbox = self.selected_words.checkbox(word, True)
-            self.words_and_defs_table.setCellWidget(i, 2, checkbox)
+    def continue_action(self):
+        config = mw.addonManager.getConfig(__name__)
+        config['study_words_num'] = self.study_words_num
+        config['skip_words_num'] = self.skip_words_num
+        mw.addonManager.writeConfig(__name__, config)
 
-    @property
-    def words_to_study(self) -> List[chinesevocablist.VocabWord]:
-        return self.get_words_to_study(self.study_words_num, self.skip_words_num)
+        final_touches_window = FinalTouchesWindow([
+            w for w in self.words_to_study if self.selected_words.selected(w)])
+
+        self.close()
+        final_touches_window.show()
+
+
+    @cached_property
+    def input_segmented(self) -> List[str]:
+        """
+        Return the input after segmenting into words.
+        """
+        jieba.setLogLevel(logging.ERROR)
+        jieba.initialize()
+
+        return list(jieba.cut(self.input_text))
+
+    @cached_property
+    def input_words(self) -> List[str]:
+        """
+        Return unique words in text, as a list, sorted by order of appearance in text.
+        """
+        rv = []
+        seen_words = set()
+
+        for word in self.input_segmented:
+            if word in seen_words:
+                continue
+            if not is_chinese_word(word):
+                continue
+
+            seen_words.add(word)
+            rv.append(word)
+
+        return rv
+
+    @cached_property
+    def words_already_studied(self) -> Set[str]:
+        """
+        Get words that are already studied, as a set.
+
+        TODO this is a total hack right now.
+        """
+        # logic: a word is studied if there is a corresponding note with at least one card that is seen, or if there
+        # is a corresponding note with all cards suspended
+        def words_for_query(query):
+            notes = [mw.col.getNote(id_) for id_ in mw.col.find_notes(query)]
+            rv = set()
+            for note in notes:
+                rv.update(f for f in note.fields if is_chinese_word(f))
+            return rv
+
+        suspended = words_for_query('is:suspended')
+        not_suspended = words_for_query('-is:suspended')
+        not_new = words_for_query('-is:new')
+
+        return not_new | (suspended - not_suspended)
+
+    @cached_property
+    def unknown_words(self) -> List[str]:
+        """
+        Get words in the text that aren't already studied.
+        """
+        return [word for word in self.input_words if word not in self.words_already_studied]
+
+    @cached_property
+    def vocab_list(self):
+        return chinesevocablist.VocabList.load()
+
+    @cached_property
+    def all_words_to_study(self) -> List[Optional[chinesevocablist.VocabWord]]:
+        """
+        Returns `vocab_list.words`, with `None` replacing elements that aren't in `input_text`.
+
+        This allows us to quickly determine which words correspond to a given vocab target.
+        """
+        unknown_words_set = set(self.unknown_words)
+        return [w if {w.simp, w.trad} & unknown_words_set else None for w in self.vocab_list.words]
 
     @property
     def study_words_num(self):
@@ -238,44 +289,23 @@ class WordsWindow(QWidget):
 
         return sorted(words, key=index)
 
-    @cached_property
-    def all_words_to_study(self) -> List[Optional[chinesevocablist.VocabWord]]:
-        """
-        Returns `vocab_list.words`, with `None` replacing elements that aren't in `input_text`.
+    @property
+    def words_to_study(self) -> List[chinesevocablist.VocabWord]:
+        return self.get_words_to_study(self.study_words_num, self.skip_words_num)
 
-        This allows us to quickly determine which words correspond to a given vocab target.
-        """
-        unknown_words_set = set(self.unknown_words)
-        return [w if {w.simp, w.trad} & unknown_words_set else None for w in self.vocab_list.words]
+    def update_words_and_defs_table(self):
+        words_to_study = self.words_to_study
+        self.words_and_defs_table.setRowCount(len(words_to_study))
 
-    @cached_property
-    def unknown_words(self) -> List[str]:
-        """
-        Get words in the text that aren't already studied.
-        """
-        return [word for word in self.input_words if word not in self.words_already_studied]
+        def set_flags(item):
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
+            return item
 
-    @cached_property
-    def words_already_studied(self) -> Set[str]:
-        """
-        Get words that are already studied, as a set.
-
-        TODO this is a total hack right now.
-        """
-        # logic: a word is studied if there is a corresponding note with at least one card that is seen, or if there
-        # is a corresponding note with all cards suspended
-        def words_for_query(query):
-            notes = [mw.col.getNote(id_) for id_ in mw.col.find_notes(query)]
-            rv = set()
-            for note in notes:
-                rv.update(f for f in note.fields if is_chinese_word(f))
-            return rv
-
-        suspended = words_for_query('is:suspended')
-        not_suspended = words_for_query('-is:suspended')
-        not_new = words_for_query('-is:new')
-
-        return not_new | (suspended - not_suspended)
+        for i, word in enumerate(words_to_study):
+            self.words_and_defs_table.setItem(i, 0, set_flags(QTableWidgetItem(word.simp)))
+            self.words_and_defs_table.setItem(i, 1, set_flags(QTableWidgetItem(word.defs[0])))
+            checkbox = self.selected_words.checkbox(word, True)
+            self.words_and_defs_table.setCellWidget(i, 2, checkbox)
 
     @property
     def input_with_hard_words_annotated(self) -> List[Tuple[str, Optional[chinesevocablist.VocabWord]]]:
@@ -304,36 +334,6 @@ class WordsWindow(QWidget):
                 rv.append((seg, None))
 
         return rv
-
-    @cached_property
-    def vocab_list(self):
-        return chinesevocablist.VocabList.load()
-
-    def init_words_and_defs_table(self, parent=None):
-        """
-        Generates a widget that displays a table of words and definitions.
-
-        :param word_def_pairs: list of (word, def) tuples
-        :return: a widget
-        """
-        ret = QTableWidget(0, 3, parent)
-        ret.setHorizontalHeaderLabels(['Hanzi', 'English', 'Add'])
-        ret.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        ret.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-        return ret
-
-    def continue_action(self):
-        config = mw.addonManager.getConfig(__name__)
-        config['study_words_num'] = self.study_words_num
-        config['skip_words_num'] = self.skip_words_num
-        mw.addonManager.writeConfig(__name__, config)
-
-        final_touches_window = FinalTouchesWindow([
-            w for w in self.words_to_study if self.selected_words.selected(w)])
-
-        self.close()
-        final_touches_window.show()
-
 
 class FinalTouchesWindow(QWidget):
     """
