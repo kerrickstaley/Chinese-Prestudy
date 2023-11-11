@@ -13,6 +13,7 @@ import chinesevocablist
 import chineseflashcards
 import genanki
 import functools
+import enum
 
 RECOMMENDED_LEARN_WORDS_NUM = 3500
 RECOMMENDED_SKIP_WORDS_NUM = 0
@@ -109,6 +110,12 @@ class SelectedWords:
         return self._selected[self._key(word)]
 
 
+class WordStatus(enum.Enum):
+    NEW = enum.auto()
+    SEEN = enum.auto()
+    NOT_IN_TEXT = enum.auto()
+
+
 class WordsWindow(QWidget):
     """
     Class that manages all the state associated with the Chinese Prestudy add-on.
@@ -171,8 +178,8 @@ class WordsWindow(QWidget):
         :param word_def_pairs: list of (word, def) tuples
         :return: a widget
         """
-        ret = QTableWidget(0, 3, parent)
-        ret.setHorizontalHeaderLabels(['Hanzi', 'English', 'Add'])
+        ret = QTableWidget(0, 4, parent)
+        ret.setHorizontalHeaderLabels(['Hanzi', 'English', 'Add', 'Status'])
         ret.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         ret.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         return ret
@@ -184,7 +191,7 @@ class WordsWindow(QWidget):
         mw.addonManager.writeConfig(__name__, config)
 
         final_touches_window = FinalTouchesWindow([
-            w for w in self.words_to_study if self.selected_words.selected(w)])
+            w for (w, _) in self.words_to_study if self.selected_words.selected(w)])
 
         self.close()
         final_touches_window.show()
@@ -252,14 +259,29 @@ class WordsWindow(QWidget):
         return chinesevocablist.VocabList.load()
 
     @cached_property
-    def all_words_to_study(self) -> List[Optional[chinesevocablist.VocabWord]]:
+    def all_words_to_study(self) -> List[Tuple[chinesevocablist.VocabWord, WordStatus]]:
         """
-        Returns `vocab_list.words`, with `None` replacing elements that aren't in `input_text`.
+        Returns `vocab_list.words`, along with a WordStatus for each word.
 
-        This allows us to quickly determine which words correspond to a given vocab target.
+        The WordStatus tells us whether the word is in the text or not and whether it has been
+        previously seen by the user or not.
+
+        Using a list as the return data structure allows us to quickly determine which words
+        correspond to a given vocab target.
         """
-        unknown_words_set = set(self.unknown_words)
-        return [w if {w.simp, w.trad} & unknown_words_set else None for w in self.vocab_list.words]
+        input_words_set = set(self.input_words)
+        ret = []
+        for w in self.vocab_list.words:
+            hanzi = {w.simp, w.trad}
+            if hanzi & input_words_set:
+                if hanzi & self.words_already_studied:
+                    status = WordStatus.SEEN
+                else:
+                    status = WordStatus.NEW
+            else:
+                status = WordStatus.NOT_IN_TEXT
+            ret.append((w, status))
+        return ret
 
     @property
     def study_words_num(self):
@@ -275,13 +297,14 @@ class WordsWindow(QWidget):
         except ValueError:
             return 0
 
-    def get_words_to_study(self, study_words_num, skip_words_num) -> List[chinesevocablist.VocabWord]:
-        words = [w for w in self.all_words_to_study[skip_words_num:study_words_num] if w is not None]
+    def get_words_to_study(self, study_words_num, skip_words_num) -> List[Tuple[chinesevocablist.VocabWord, WordStatus]]:
+        words = [(w, status) for (w, status) in self.all_words_to_study[skip_words_num:study_words_num] if status in (WordStatus.NEW, WordStatus.SEEN)]
 
         # re-sort to match input order
         # TODO this is inefficient
-        def index(vocab_word):
-            for i, input_word in enumerate(self.unknown_words):
+        def index(vocab_word_and_status):
+            vocab_word, status = vocab_word_and_status
+            for i, input_word in enumerate(self.input_words):
                 if input_word in [vocab_word.simp, vocab_word.trad]:
                     return i
             raise Exception
@@ -289,7 +312,7 @@ class WordsWindow(QWidget):
         return sorted(words, key=index)
 
     @property
-    def words_to_study(self) -> List[chinesevocablist.VocabWord]:
+    def words_to_study(self) -> List[Tuple[chinesevocablist.VocabWord, WordStatus]]:
         return self.get_words_to_study(self.study_words_num, self.skip_words_num)
 
     def update_words_and_defs_table(self):
@@ -300,11 +323,18 @@ class WordsWindow(QWidget):
             item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
             return item
 
-        for i, word in enumerate(words_to_study):
+        for i, (word, status) in enumerate(words_to_study):
             self.words_and_defs_table.setItem(i, 0, set_flags(QTableWidgetItem(word.simp)))
             self.words_and_defs_table.setItem(i, 1, set_flags(QTableWidgetItem(word.defs[0])))
-            checkbox = self.selected_words.checkbox(word, True)
+            checkbox = self.selected_words.checkbox(word, status == WordStatus.NEW)
             self.words_and_defs_table.setCellWidget(i, 2, checkbox)
+            if status == WordStatus.NEW:
+                status_text = 'New'
+            elif status == WordStatus.SEEN:
+                status_text = 'Seen'
+            else:
+                raise RuntimeError('unreachable')
+            self.words_and_defs_table.setItem(i, 3, set_flags(QTableWidgetItem(status_text)))
 
     @property
     def input_with_hard_words_annotated(self) -> List[Tuple[str, Optional[chinesevocablist.VocabWord]]]:
@@ -320,7 +350,7 @@ class WordsWindow(QWidget):
         # TODO we currently only cover words that appear in the Chinese Vocab List. Instead, we should synthesize
         #     VocabWords when they aren't in the vocab list.
         # TODO We're assuming simplified characters here.
-        definitions = {word.simp: word for word in self.all_words_to_study if word is not None}
+        definitions = {word.simp: word for (word, status) in self.all_words_to_study if status == WordStatus.NEW}
         to_define_set = set(definitions)
         to_define_set -= set(word.simp for word in self.words_to_study)
 
@@ -333,6 +363,7 @@ class WordsWindow(QWidget):
                 rv.append((seg, None))
 
         return rv
+
 
 class FinalTouchesWindow(QWidget):
     """
