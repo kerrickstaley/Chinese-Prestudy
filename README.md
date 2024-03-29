@@ -14,7 +14,7 @@ If you want to contribute back to this project, follow these instructions:
 2. You need Anki 2.1 installed.
 3. Install Python dependencies:
 ```
-pip3 install --user chinesevocablist chineseflashcards genanki jieba cached_property chevron pyyaml
+pip3 install --user chinesevocablist chineseflashcards genanki jieba cached_property chevron pyyaml requests
 ```
 
 ### Running
